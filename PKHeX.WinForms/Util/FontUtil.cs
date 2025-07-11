@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -24,7 +24,7 @@ public static class FontUtil
         }
         catch (FileNotFoundException ex)
         {
-            Debug.WriteLine($"Unable to read font file: {ex.Message}");
+            Debug.WriteLine($"Unable to read this font file: {ex.Message}");
         }
         catch (Exception ex)
         {
