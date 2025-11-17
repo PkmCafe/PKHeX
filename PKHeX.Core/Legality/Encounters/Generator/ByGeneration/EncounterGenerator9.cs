@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using static PKHeX.Core.GameVersion;
 
 namespace PKHeX.Core;
 
-public sealed class EncounterGenerator9 : IEncounterGenerator
+public sealed class EncounterGenerator9 : IEncounterGenerator, IEncounterGeneratorSWSH
 {
     public static readonly EncounterGenerator9 Instance = new();
     public bool CanGenerateEggs => true;
@@ -23,18 +24,18 @@ public sealed class EncounterGenerator9 : IEncounterGenerator
         };
     }
 
-    public IEnumerable<IEncounterable> GetPossible(PKM _, EvoCriteria[] chain, GameVersion game, EncounterTypeGroup groups)
+    public IEnumerable<IEncounterable> GetPossible(PKM _, EvoCriteria[] chain, GameVersion version, EncounterTypeGroup groups)
     {
-        var iterator = new EncounterPossible9(chain, groups, game);
+        var iterator = new EncounterPossible9(chain, groups, version);
         foreach (var enc in iterator)
             yield return enc;
     }
 
-    public IEnumerable<IEncounterable> GetEncountersSWSH(PKM pk, EvoCriteria[] chain, GameVersion game)
+    public IEnumerable<IEncounterable> GetEncountersSWSH(PKM pk, EvoCriteria[] chain, GameVersion version)
     {
         if (pk is not PK8 pk8)
             yield break;
-        var iterator = new EncounterEnumerator9SWSH(pk8, chain, game);
+        var iterator = new EncounterEnumerator9SWSH(pk8, chain, version);
         foreach (var enc in iterator)
             yield return enc.Encounter;
     }
@@ -50,14 +51,14 @@ public sealed class EncounterGenerator9 : IEncounterGenerator
     private const EntityContext Context = EntityContext.Gen9;
     private const byte EggLevel = 1;
 
-    public static bool TryGetEgg(PKM pk, EvoCriteria[] chain, GameVersion version, [NotNullWhen(true)] out EncounterEgg9? result)
+    public static bool TryGetEgg(PKM pk, ReadOnlySpan<EvoCriteria> chain, GameVersion version, [NotNullWhen(true)] out EncounterEgg9? result)
     {
         if (version == 0 && pk.IsEgg)
             version = SL;
         return TryGetEgg(chain, version, out result);
     }
 
-    public static bool TryGetEgg(EvoCriteria[] chain, GameVersion version, [NotNullWhen(true)] out EncounterEgg9? result)
+    public static bool TryGetEgg(ReadOnlySpan<EvoCriteria> chain, GameVersion version, [NotNullWhen(true)] out EncounterEgg9? result)
     {
         result = null;
         var devolved = chain[^1];

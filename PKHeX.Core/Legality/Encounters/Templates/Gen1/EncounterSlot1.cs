@@ -32,7 +32,7 @@ public sealed record EncounterSlot1(EncounterArea1 Parent, ushort Species, byte 
     public PK1 ConvertToPKM(ITrainerInfo tr, EncounterCriteria criteria)
     {
         var version = this.GetCompatibleVersion(tr.Version);
-        int language = (int)Language.GetSafeLanguage(Generation, (LanguageID)tr.Language, version);
+        int language = (int)Language.GetSafeLanguage1((LanguageID)tr.Language, version);
         var isJapanese = language == (int)LanguageID.Japanese;
         var pi = EncounterUtil.GetPersonal1(version, Species);
         var pk = new PK1(isJapanese)
@@ -70,7 +70,7 @@ public sealed record EncounterSlot1(EncounterArea1 Parent, ushort Species, byte 
 
         var rate = pk1.CatchRate;
         var expect = EncounterUtil.GetPersonal1(Version, Species).CatchRate;
-        if (expect != rate && !(ParseSettings.AllowGen1Tradeback && GBRestrictions.IsTradebackCatchRate(rate)))
+        if (expect != rate && !(ParseSettings.AllowGen1Tradeback && ItemConverter.IsCatchRateHeldItem(rate)))
             return false;
         return true;
     }

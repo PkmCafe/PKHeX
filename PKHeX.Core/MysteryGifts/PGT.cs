@@ -8,10 +8,9 @@ namespace PKHeX.Core;
 /// <summary>
 /// Generation 4 Mystery Gift Template File (Inner Gift Data, no card data)
 /// </summary>
-public sealed class PGT : DataMysteryGift, IRibbonSetEvent3, IRibbonSetEvent4, IRandomCorrelation
+public sealed class PGT(Memory<byte> raw) : DataMysteryGift(raw), IRibbonSetEvent3, IRibbonSetEvent4, IRandomCorrelation
 {
     public PGT() : this(new byte[Size]) { }
-    public PGT(Memory<byte> raw) : base(raw) { }
     public override PGT Clone() => new(Data.ToArray());
 
     public const int Size = 0x104; // 260
@@ -53,7 +52,7 @@ public sealed class PGT : DataMysteryGift, IRibbonSetEvent3, IRibbonSetEvent4, I
         {
             _pk = value;
             var data = value.Data;
-            bool zero = Array.TrueForAll(data, static z => z == 0); // all zero
+            bool zero = !data.ContainsAnyExcept<byte>(0); // all zero
             if (!zero)
                 data = PokeCrypto.EncryptArray45(data);
             data.CopyTo(Data[8..]);

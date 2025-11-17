@@ -31,12 +31,12 @@ public sealed record EncounterGift3Colo : IEncounterable, IEncounterMatch, IEnco
     public required ushort TID16 { get; init; }
     public required byte OriginalTrainerGender { get; init; }
 
-    public EncounterGift3Colo(ushort species, byte level, ReadOnlyMemory<string> trainers, GameVersion game)
+    public EncounterGift3Colo(ushort species, byte level, ReadOnlyMemory<string> trainers, GameVersion version)
     {
         Species = species;
         Level = level;
         TrainerNames = trainers;
-        Version = game;
+        Version = version;
     }
 
     public string Name => "Gift Encounter";
@@ -85,7 +85,7 @@ public sealed record EncounterGift3Colo : IEncounterable, IEncounterMatch, IEnco
     {
         if (IsJapaneseBonusDisk)
             return 1; // Japanese
-        return (int)Language.GetSafeLanguage(Generation, (LanguageID)tr.Language);
+        return (int)Language.GetSafeLanguage3((LanguageID)tr.Language);
     }
 
     private static void SetPINGA(CK3 pk, in EncounterCriteria criteria, PersonalInfo3 pi)

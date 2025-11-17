@@ -22,14 +22,14 @@ public static class ItemConverter
     /// </summary>
     /// <param name="item">Generation 3 Item ID.</param>
     /// <returns>Generation 4+ Item ID.</returns>
-    public static ushort GetItemFuture3(ushort item) => item > Item3to4.Length ? NaN : Item3to4[item];
+    public static ushort GetItemFuture3(ushort item) => item >= Item3to4.Length ? NaN : Item3to4[item];
 
     /// <summary>
     /// Converts a Generation 2 Item ID to Generation 4+ Item ID.
     /// </summary>
     /// <param name="item">Generation 2 Item ID.</param>
     /// <returns>Generation 4+ Item ID.</returns>
-    public static ushort GetItemFuture2(byte item) => item > Item2to4.Length ? NaN : Item2to4[item];
+    public static ushort GetItemFuture2(byte item) => item >= Item2to4.Length ? NaN : Item2to4[item];
 
     /// <summary>
     /// Converts a Generation 4+ Item ID to Generation 3 Item ID.
@@ -159,12 +159,10 @@ public static class ItemConverter
     /// <returns>Gen2 Item</returns>
     public static byte GetItemFuture1(byte value)
     {
-        if (!IsItemTransferable12(value))
+        if (!IsCatchRateHeldItem(value))
             return GetTeruSamaItem(value);
         return value;
     }
-
-    private static bool IsItemTransferable12(ushort item) => Legal.HeldItems_GSC.AsSpan().Contains(item);
 
     /// <summary>
     /// Gets a format specific <see cref="PKM.HeldItem"/> value depending on the desired format and the provided item index &amp; origin format.
@@ -200,7 +198,7 @@ public static class ItemConverter
         return destFormat switch
         {
             EntityContext.Gen1 => 0,
-            EntityContext.Gen2 => (byte) srcItem,
+            EntityContext.Gen2 => GetItemOld2((ushort) srcItem),
             EntityContext.Gen3 => GetItemOld3((ushort) srcItem),
             _ => srcItem,
         };
@@ -219,4 +217,46 @@ public static class ItemConverter
         3 => item is (>= 339 and <= 346),
         _ => item is (>= 420 and <= 427) or 737,
     };
+
+    /// <summary>
+    /// Checks if the catch rate byte is equivalent to a Gen2 held item.
+    /// </summary>
+    public static bool IsCatchRateHeldItem(byte rate) => FlagUtil.GetFlag(CatchRateIsHeldItem, rate);
+
+    private static ReadOnlySpan<byte> CatchRateIsHeldItem =>
+    [
+        0x3F, 0xFF, 0xFF, 0xFD, 0xFF, 0xDF, 0x3B, 0xD2,
+        0x03, 0xFF, 0xFF, 0xFB, 0xEF, 0xFF, 0xE7, 0x7E,
+        0x18, 0x9C, 0xC5, 0xF1, 0xFB, 0x77, 0xF0, 0xBF,
+        0xF7, 0xFF, 0xFF, 0xEF, 0xFF, 0xFF, 0x07, 0x00,
+    ];
+
+    /// <summary>
+    /// Gets the <see cref="EntityContext.Gen9a"/> TM index from the old sequential TM index.
+    /// </summary>
+    /// <param name="oldTM">old TM index</param>
+    /// <returns>New TM index</returns>
+    public static ushort GetTechnicalMachineIndex9a(ushort oldTM)
+    {
+        var arr = RemapTechnicalMachineItemName9a;
+        if ((uint)oldTM >= arr.Length)
+            return oldTM;
+        return (ushort)(oldTM + RemapTechnicalMachineItemName9a[oldTM]);
+    }
+
+    // Old (sequential) index to Legends: Z-A "scrambled" order that is displayed to the user.
+    public static ReadOnlySpan<sbyte> RemapTechnicalMachineItemName9a =>
+    [
+          0,   0,   0,   0, +02,   0, +01, +22, +03,   0,
+        +13, +35, +30, +11, +91, +29,   0,   0, +29, +40,
+        +31, -02, +42, +70, +43, +81, +43, -02,   0, +34,
+        +44, -21,   0, -02, -14, -02, +17, +11,   0, -03,
+        -18, +57, -03, -03, -31, +13, -03, +28, -03, +55,
+          0, +22, +50, -27, -05, +52, -04, +22, -04, -25,
+        -04, -04,   0, -22, -04, -04, +12, +29, -13, +12,
+        -43, -06, -06, -65, -06, -45, -06, -06, -06, +22,
+        -68, +06, -68, -07, -07, -64, -71, -07, +15, -07,
+        -07, -07, -07, -07, -90, -07, -07, -07, -80, -07,
+        -63,   0, -08, -08, -13, -08, -71, -08, -08,
+    ];
 }

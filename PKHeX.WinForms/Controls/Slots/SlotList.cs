@@ -70,7 +70,8 @@ public partial class SlotList : UserControl, ISlotViewer<PictureBox>
         if (index < 0)
             return;
         var pb = slots[index];
-        SlotUtil.UpdateSlot(pb, slot, pk, SAV, FlagIllegal, type);
+        var showLegality = m is not { HideLegality: true };
+        SlotUtil.UpdateSlot(pb, slot, pk, SAV, FlagIllegal && showLegality, type);
     }
 
     public int GetViewIndex(ISlotInfo info) => SlotOffsets.FindIndex(info.Equals);
@@ -87,8 +88,7 @@ public partial class SlotList : UserControl, ISlotViewer<PictureBox>
 
     public int GetSlot(PictureBox sender)
     {
-        var view = WinFormsUtil.GetUnderlyingControl<PictureBox>(sender);
-        if (view is null)
+        if (!WinFormsUtil.TryGetUnderlying<PictureBox>(sender, out var view))
             return -1;
         return slots.IndexOf(view);
     }

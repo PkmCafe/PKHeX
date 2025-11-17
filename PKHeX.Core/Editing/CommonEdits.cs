@@ -58,7 +58,8 @@ public static class CommonEdits
         if (abilityID < 0)
             return;
         var index = pk.PersonalInfo.GetIndexOfAbility(abilityID);
-        index = Math.Max(0, index);
+        if (index < 0)
+            return; // leave original value
         pk.SetAbilityIndex(index);
     }
 
@@ -193,8 +194,10 @@ public static class CommonEdits
             // Under this scenario, just apply maximum EVs (65535).
             if (!evs.ContainsAnyExcept(0))
                 gb.MaxEVs();
-            else
+            else if (evs.ContainsAnyExceptInRange(0, 252)) // Any specified above 252
                 gb.SetEVs(evs);
+            else
+                gb.SetSqrtEVs(evs);
         }
         else
         {
@@ -256,6 +259,13 @@ public static class CommonEdits
             t.ClearRecordFlags();
             t.SetRecordFlags(set.Moves, legal.Info.EvoChainsAllGens.Get(pk.Context));
         }
+
+        if (pk is IPlusRecord plus && pk.PersonalInfo is IPermitPlus permit)
+        {
+            plus.ClearPlusFlags(permit.PlusCountTotal);
+            plus.SetPlusFlags(permit, legal, true, true);
+        }
+
         if (legal.Parsed && !MoveResult.AllValid(legal.Info.Relearn))
             pk.SetRelearnMoves(legal);
         pk.ResetPartyStats();
@@ -405,7 +415,7 @@ public static class CommonEdits
     {
         if (pk.IsEgg)
             return;
-        pk.CurrentLevel = 100;
+        pk.CurrentLevel = Experience.MaxLevel;
         if (pk is ICombatPower pb)
             pb.ResetCP();
     }

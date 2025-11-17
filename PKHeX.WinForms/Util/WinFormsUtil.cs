@@ -43,17 +43,22 @@ public static class WinFormsUtil
 
     public static T? FirstFormOfType<T>() where T : Form => Application.OpenForms.OfType<T>().FirstOrDefault();
 
-    public static T? FindFirstControlOfType<T>(Control aParent) where T : class
+    public static bool TryFindFirstControlOfType<T>(Control aParent, [NotNullWhen(true)] out T? result) where T : class
     {
         while (true)
         {
             if (aParent is T t)
-                return t;
+            {
+                result = t;
+                return true;
+            }
+            if (aParent.Parent is null)
+            {
+                result = null;
+                return false;
+            }
 
-            if (aParent.Parent is not null)
-                aParent = aParent.Parent;
-            else
-                return null;
+            aParent = aParent.Parent;
         }
     }
 
@@ -61,23 +66,25 @@ public static class WinFormsUtil
     /// Searches upwards through the control hierarchy to find the first parent control of type <typeparamref name="T"/>.
     /// </summary>
     /// <param name="sender">Child control to start searching from.</param>
-    /// <returns>The first parent control of type <typeparamref name="T"/>, or null if none found.</returns>
-    public static T? GetUnderlyingControl<T>(object sender) where T : class
+    /// <param name="result">The first parent control of type <typeparamref name="T"/>, or null if none found.</param>
+    public static bool TryGetUnderlying<T>(object sender, [NotNullWhen(true)] out T? result) where T : class
     {
         while (true)
         {
             switch (sender)
             {
                 case T p:
-                    return p;
-                case ToolStripItem { Owner: { } o}:
+                    result = p;
+                    return true;
+                case ToolStripItem { Owner: { } o }:
                     sender = o;
                     continue;
                 case ContextMenuStrip { SourceControl: { } s }:
                     sender = s;
                     continue;
                 default:
-                    return null;
+                    result = null;
+                    return false;
             }
         }
     }
@@ -153,8 +160,9 @@ public static class WinFormsUtil
             Error(MsgClipboardFailWrite, x);
         }
         // Clipboard might be locked sometimes
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine(ex);
             Error(MsgClipboardFailWrite);
         }
 
@@ -384,7 +392,7 @@ public static class WinFormsUtil
         using var sfd = new SaveFileDialog();
         sfd.Filter = sav.Metadata.Filter;
         sfd.FileName = sav.Metadata.FileName;
-        sfd.FilterIndex = 1000; // default to last, All Files
+        sfd.FilterIndex = 0; // default to first filter rather than All Files (last), if one is available.
         sfd.RestoreDirectory = true;
         if (Directory.Exists(sav.Metadata.FileFolder))
             sfd.InitialDirectory = sav.Metadata.FileFolder;
@@ -409,7 +417,8 @@ public static class WinFormsUtil
 
         try
         {
-            File.WriteAllBytes(path, sav.Write(flags));
+            var data = sav.Write(flags).Span;
+            ExportSAVInternal(data, path, sav.Metadata.FilePath);
             sav.State.Edited = false;
             sav.Metadata.SetExtraInfo(path);
             Alert(MsgSaveExportSuccessPath, path);
@@ -421,6 +430,26 @@ public static class WinFormsUtil
             else // Don't know what threw, but it wasn't I/O related.
                 throw;
         }
+    }
+
+    private static void ExportSAVInternal(ReadOnlySpan<byte> data, string path, string? exist)
+    {
+        // If it originated from a zip, and a zip is being written, update the zip.
+        if (Path.GetExtension(path) is ".zip")
+        {
+            if (Path.Exists(exist) && Path.GetExtension(exist) is ".zip")
+            {
+                // If the paths are different, copy the original zip to the new location first.
+                if (path != exist)
+                    File.Copy(exist, path, true);
+
+                ZipReader.Update(path, data);
+                return;
+            }
+        }
+
+        // Otherwise, just write the raw data.
+        File.WriteAllBytes(path, data);
     }
 
     /// <summary>
@@ -481,6 +510,11 @@ public static class WinFormsUtil
         {
             // For languages with multiple supported variants, map the language tag to one of the supported ones
             // https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-lcid/a9eac961-e77d-41a6-90a5-ce1a8b0cdb9c
+            "es" => name switch
+            {
+                "es" or "es-ES" or "es-ES_tradnl" or "es-GQ"   => "es",     // Spanish (Spain)
+                                                             _ => "es-419", // Spanish (Latin America)
+            },
             "zh" => name switch
             {
                 "zh-Hant" or "zh-HK" or "zh-MO" or "zh-TW"   => "zh-Hant", // Traditional Chinese (Hong Kong/Macau/Taiwan)

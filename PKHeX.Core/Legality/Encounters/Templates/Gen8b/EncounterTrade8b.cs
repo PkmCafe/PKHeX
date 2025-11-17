@@ -58,9 +58,9 @@ public sealed record EncounterTrade8b : IEncounterable, IEncounterMatch, IEncoun
     public byte LevelMin => Level;
     public byte LevelMax => Level;
 
-    public EncounterTrade8b(ReadOnlySpan<string[]> names, byte index, GameVersion game)
+    public EncounterTrade8b(ReadOnlySpan<string[]> names, byte index, GameVersion version)
     {
-        Version = game;
+        Version = version;
         Nicknames = EncounterUtil.GetNamesForLanguage(names, index);
         TrainerNames = EncounterUtil.GetNamesForLanguage(names, (uint)(index + (names[1].Length >> 1)));
     }
@@ -74,7 +74,7 @@ public sealed record EncounterTrade8b : IEncounterable, IEncounterMatch, IEncoun
 
     public PB8 ConvertToPKM(ITrainerInfo tr, EncounterCriteria criteria)
     {
-        int language = (int)Language.GetSafeLanguage(Generation, (LanguageID)tr.Language);
+        int language = (int)Language.GetSafeLanguage789((LanguageID)tr.Language);
         var version = this.GetCompatibleVersion(tr.Version);
         var pi = PersonalTable.BDSP[Species, Form];
         var pk = new PB8

@@ -14,7 +14,7 @@ Platinum
 
 
 Colosseum/XD
-
+Battle Revolution
 
 
 
@@ -50,3 +50,4 @@ Brilliant Diamond
 Shining Pearl
 Scarlet
 Violet
+Legends: Z-A

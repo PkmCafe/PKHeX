@@ -28,7 +28,7 @@ public sealed record EncounterStatic5Radar(ushort Species, byte Form, AbilityPer
 
     public PK5 ConvertToPKM(ITrainerInfo tr, EncounterCriteria criteria)
     {
-        int language = (int)Language.GetSafeLanguage(Generation, (LanguageID)tr.Language);
+        int language = (int)Language.GetSafeLanguage456((LanguageID)tr.Language);
         var version = this.GetCompatibleVersion(tr.Version);
         var pi = PersonalTable.B2W2[Species];
         var pk = new PK5
@@ -62,11 +62,11 @@ public sealed record EncounterStatic5Radar(ushort Species, byte Form, AbilityPer
 
     private void SetPINGA(PK5 pk, in EncounterCriteria criteria, PersonalInfo5B2W2 pi)
     {
-        var abilityIndex = criteria.GetAbilityFromNumber(Ability);
-        var seed = Util.Rand32();
-        MonochromeRNG.Generate(pk, criteria with { Shiny = Shiny.Never }, pi.Gender, seed, abilityIndex);
+        var seed = Util.Rand.Rand64();
+        MonochromeRNG.Generate(pk, criteria, pi.Gender, seed, false, Shiny, Ability);
 
         pk.Nature = criteria.GetNature();
+        var abilityIndex = Ability == AbilityPermission.OnlyHidden ? 2 : (int)(pk.PID >> 16) & 1;
         pk.RefreshAbility(abilityIndex);
         criteria.SetRandomIVs(pk);
     }

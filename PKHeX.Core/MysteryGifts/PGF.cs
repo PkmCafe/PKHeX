@@ -6,11 +6,10 @@ namespace PKHeX.Core;
 /// <summary>
 /// Generation 5 Mystery Gift Template File
 /// </summary>
-public sealed class PGF : DataMysteryGift, IRibbonSetEvent3, IRibbonSetEvent4, ILangNick,
+public sealed class PGF(Memory<byte> raw) : DataMysteryGift(raw), IRibbonSetEvent3, IRibbonSetEvent4, ILangNick,
     IContestStats, INature, IMetLevel, IRestrictVersion
 {
     public PGF() : this(new byte[Size]) { }
-    public PGF(Memory<byte> raw) : base(raw) { }
     public override PGF Clone() => new(Data.ToArray());
 
     public int RestrictLanguage { get; set; } // None
@@ -419,7 +418,7 @@ public sealed class PGF : DataMysteryGift, IRibbonSetEvent3, IRibbonSetEvent4, I
         {
             if (EggLocation != pk.EggLocation) // traded
             {
-                if (pk.EggLocation != Locations.LinkTrade5)
+                if (pk.IsEgg || pk.EggLocation is not (Locations.LinkTrade5 or Locations.LinkTrade5NPC))
                     return false;
             }
             else if (PIDType == 0 && pk.IsShiny)

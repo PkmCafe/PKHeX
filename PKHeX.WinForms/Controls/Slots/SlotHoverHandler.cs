@@ -37,9 +37,9 @@ public sealed class SlotHoverHandler : IDisposable
     /// <param name="lastSlot">The last slot tracker image to update.</param>
     public void Start(PictureBox pb, SlotTrackerImage lastSlot)
     {
-        var view = WinFormsUtil.FindFirstControlOfType<ISlotViewer<PictureBox>>(pb);
-        if (view is null)
-            throw new InvalidCastException(nameof(view));
+        if (!WinFormsUtil.TryFindFirstControlOfType<ISlotViewer<PictureBox>>(pb, out var view))
+            ArgumentNullException.ThrowIfNull(view);
+
         var data = view.GetSlotData(pb);
         var pk = data.Read(view.SAV);
         Slot = pb;
@@ -68,7 +68,7 @@ public sealed class SlotHoverHandler : IDisposable
             bg = ImageUtil.LayerImage(orig, bg, 0, 0);
         pb.BackgroundImage = LastSlot.CurrentBackground = bg;
 
-        Preview.Show(pb, pk);
+        Preview.Show(pb, pk, data.Type);
     }
 
     /// <summary>

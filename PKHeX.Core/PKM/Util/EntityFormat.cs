@@ -92,7 +92,7 @@ public static class EntityFormat
     {
         var pk = new PK8(data.ToArray());
         if (IsFormatReally9(pk))
-            return FormatPK9;
+            return pk.Data[0xCE] == (byte)GameVersion.ZA ? FormatPA9 : FormatPK9;
         return IsFormatReally8b(pk);
     }
 
@@ -112,16 +112,16 @@ public static class EntityFormat
     /// <param name="data">Raw data of the Pokémon file.</param>
     /// <param name="prefer">Optional identifier for the preferred generation.  Usually the generation of the destination save file.</param>
     /// <returns>An instance of <see cref="PKM"/> created from the given <paramref name="data"/>, or null if <paramref name="data"/> is invalid.</returns>
-    public static PKM? GetFromBytes(byte[] data, EntityContext prefer = EntityContext.None)
+    public static PKM? GetFromBytes(Memory<byte> data, EntityContext prefer = EntityContext.None)
     {
-        var format = GetFormat(data);
+        var format = GetFormat(data.Span);
         return GetFromBytes(data, format, prefer);
     }
 
-    private static PKM? GetFromBytes(byte[] data, EntityFormatDetected format, EntityContext prefer) => format switch
+    private static PKM? GetFromBytes(Memory<byte> data, EntityFormatDetected format, EntityContext prefer) => format switch
     {
-        FormatPK1 => PokeList1.ReadFromSingle(data),
-        FormatPK2 => PokeList2.ReadFromSingle(data),
+        FormatPK1 => PokeList1.ReadFromSingle(data.Span),
+        FormatPK2 => PokeList2.ReadFromSingle(data.Span),
         FormatSK2 => new SK2(data),
         FormatPK3 => new PK3(data),
         FormatCK3 => new CK3(data),
@@ -139,6 +139,7 @@ public static class EntityFormat
         Format6or7 => prefer == EntityContext.Gen6 ? new PK6(data) : new PK7(data),
         Format8or8b => prefer == EntityContext.Gen8b ? new PB8(data) : new PK8(data),
         FormatPK9 => new PK9(data),
+        FormatPA9 => new PA9(data),
         _ => null,
     };
 
@@ -174,7 +175,7 @@ public static class EntityFormat
         var et = pk.GroundTile;
         if (et != 0)
         {
-            if (pk.CurrentLevel < 100) // can't be hyper trained
+            if (pk.CurrentLevel < Experience.MaxLevel) // Can't be hyper trained in Gen7
                 return FormatPK6;
 
             if (!pk.Gen4) // can't have GroundTile
@@ -183,7 +184,7 @@ public static class EntityFormat
                 return FormatPK7;
         }
 
-        int mb = ReadUInt16LittleEndian(pk.Data.AsSpan(0x16));
+        int mb = ReadUInt16LittleEndian(pk.Data[0x16..]);
         if (mb > 0xAAA)
             return FormatPK6;
         for (int i = 0; i < 6; i++)
@@ -227,7 +228,7 @@ public enum EntityFormatDetected
     FormatPK4, FormatBK4, FormatRK4, FormatPK5,
     FormatPK6, FormatPK7, FormatPB7,
     FormatPK8, FormatPA8, FormatPB8,
-    FormatPK9,
+    FormatPK9, FormatPA9,
 
     Format6or7,
     Format8or8b,

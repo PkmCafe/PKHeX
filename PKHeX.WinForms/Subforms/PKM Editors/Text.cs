@@ -33,7 +33,7 @@ public partial class TrashEditor : Form
         if (raw.Length != 0)
         {
             Raw = FinalBytes = raw.ToArray();
-            AddTrashEditing(raw.Length, generation);
+            AddTrashEditing(raw.Length, generation, context);
         }
         else
         {
@@ -98,7 +98,7 @@ public partial class TrashEditor : Form
         }
     }
 
-    private void AddTrashEditing(int count, byte generation)
+    private void AddTrashEditing(int count, byte generation, EntityContext context)
     {
         FLP_Hex.Visible = true;
         GB_Trash.Visible = true;
@@ -127,11 +127,12 @@ public partial class TrashEditor : Form
         }
         TB_Text.TextChanged += (_, _) => UpdateString(TB_Text);
 
+        var source = GameInfo.Sources; // don't use FilteredSources here -- allow any species
         CB_Species.InitializeBinding();
-        CB_Species.DataSource = new BindingSource(GameInfo.SpeciesDataSource, string.Empty);
+        CB_Species.DataSource = new BindingSource(source.SpeciesDataSource, string.Empty);
 
         CB_Language.InitializeBinding();
-        CB_Language.DataSource = GameInfo.LanguageDataSource(generation);
+        CB_Language.DataSource = GameInfo.LanguageDataSource(generation, context);
     }
 
     private void UpdateNUD(NumericUpDown nud)

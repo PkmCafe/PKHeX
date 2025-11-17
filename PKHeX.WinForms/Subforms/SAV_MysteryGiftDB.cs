@@ -39,6 +39,8 @@ public partial class SAV_MysteryGiftDB : Form
         };
         Tab_Advanced.Controls.Add(UC_Builder);
         UC_Builder.SendToBack();
+        if (!Directory.Exists(DatabasePath))
+            Menu_OpenDB.Visible = false;
 
         SAV = sav.SAV;
         BoxView = sav;
@@ -105,6 +107,7 @@ public partial class SAV_MysteryGiftDB : Form
 
         CB_Format.Items[0] = MsgAny;
         CenterToParent();
+        CB_Species.Select();
     }
 
     private readonly PictureBox[] PKXBOXES;
@@ -175,7 +178,8 @@ public partial class SAV_MysteryGiftDB : Form
 
     private int GetSenderIndex(object sender)
     {
-        var pb = WinFormsUtil.GetUnderlyingControl<PictureBox>(sender);
+        if (!WinFormsUtil.TryGetUnderlying<PictureBox>(sender, out var pb))
+            ArgumentNullException.ThrowIfNull(pb);
         int index = Array.IndexOf(PKXBOXES, pb);
         if (index >= RES_MAX)
         {

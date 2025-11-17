@@ -113,7 +113,7 @@ public partial class SAV_Misc5 : Form
 
             default: throw new ArgumentOutOfRangeException(nameof(SAV.Version));
         }
-        uint valFly = ReadUInt32LittleEndian(SAV.Data.AsSpan(ofsFly));
+        uint valFly = ReadUInt32LittleEndian(SAV.Data[ofsFly..]);
         CLB_FlyDest.Items.Clear();
         CLB_FlyDest.Items.AddRange(FlyDestA);
         for (int i = 0; i < CLB_FlyDest.Items.Count; i++)
@@ -195,22 +195,22 @@ public partial class SAV_Misc5 : Form
 
     private static List<ComboItem> GetStates() =>
     [
-        new ComboItem("Not roamed", 0),
-        new ComboItem("Roaming", 1),
-        new ComboItem("Defeated", 2),
-        new ComboItem("Captured", 3),
+        new("Not roamed", 0),
+        new("Roaming", 1),
+        new("Defeated", 2),
+        new("Captured", 3),
     ];
 
     private static List<ComboItem> GetRoamStatusStates() =>
     [
-        new ComboItem("Not happened", 0),
-        new ComboItem("Go to route 7", 1),
-        new ComboItem("Event finished", 3),
+        new("Not happened", 0),
+        new("Go to route 7", 1),
+        new("Event finished", 3),
     ];
 
     private void SaveMain()
     {
-        uint valFly = ReadUInt32LittleEndian(SAV.Data.AsSpan(ofsFly));
+        uint valFly = ReadUInt32LittleEndian(SAV.Data[ofsFly..]);
         for (int i = 0; i < CLB_FlyDest.Items.Count; i++)
         {
             if (FlyDestC[i] < 32)
@@ -226,7 +226,7 @@ public partial class SAV_Misc5 : Form
                 SAV.Data[ofs] = (byte)((SAV.Data[ofs] & ~(1 << (FlyDestC[i] & 7))) | ((CLB_FlyDest.GetItemChecked(i) ? 1 : 0) << (FlyDestC[i] & 7)));
             }
         }
-        WriteUInt32LittleEndian(SAV.Data.AsSpan(ofsFly), valFly);
+        WriteUInt32LittleEndian(SAV.Data[ofsFly..], valFly);
 
         if (SAV is SAV5BW bw)
         {
@@ -328,7 +328,7 @@ public partial class SAV_Misc5 : Form
             LB_FunfestMissions.Items.AddRange(FMTitles);
 
             CB_FMLevel.Items.Clear();
-            CB_FMLevel.Items.AddRange(["Lv.1", "Lv.2 +", "Lv.3 ++", "Lv.3 +++"]);
+            CB_FMLevel.Items.AddRange("Lv.1", "Lv.2 +", "Lv.3 ++", "Lv.3 +++");
             SetNudMax();
             SetEntreeExpTooltip();
             LB_FunfestMissions.SelectedIndex = 0;
@@ -850,7 +850,7 @@ public partial class SAV_Misc5 : Form
         if (SAV is SAV5B2W2)
         {
             CB_CurrentMedal.Items.AddRange(MedalNames);
-            CB_MedalState.Items.AddRange(["Unobtained", "Can Obtain Hint Medal", "Hint Medal Obtained", "Can Obtain Medal", "Medal Obtained"]);
+            CB_MedalState.Items.AddRange("Unobtained", "Can Obtain Hint Medal", "Hint Medal Obtained", "Can Obtain Medal", "Medal Obtained");
             CB_CurrentMedal.SelectedIndex = 0;
         }
     }

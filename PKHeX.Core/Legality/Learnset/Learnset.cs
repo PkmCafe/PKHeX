@@ -20,10 +20,11 @@ public sealed class Learnset(ushort[] Moves, byte[] Levels)
     private const byte MagicEvolutionMoveLevel = 0;
 
     public ReadOnlySpan<ushort> GetAllMoves() => Moves;
+    public ReadOnlySpan<byte> GetAllLevels() => Levels;
 
     public ReadOnlySpan<ushort> GetMoveRange(byte maxLevel, byte minLevel = 0)
     {
-        if (minLevel <= 1 && maxLevel >= 100)
+        if (minLevel <= Experience.MinLevel && maxLevel >= Experience.MaxLevel) // out of range, return all
             return Moves;
         if (minLevel > maxLevel)
             return default;
@@ -81,7 +82,10 @@ public sealed class Learnset(ushort[] Moves, byte[] Levels)
     {
         for (int i = 0; i < Moves.Length; i++)
         {
-            if (Levels[i] > level)
+            var req = Levels[i];
+            if (req < 1) // Evolution or Relearn-menu-only moves
+                continue;
+            if (req > level)
                 break;
 
             AddMoveShiftLater(moves, ref ctr, Moves[i]);
@@ -115,8 +119,9 @@ public sealed class Learnset(ushort[] Moves, byte[] Levels)
         }
     }
 
-    public void SetEncounterMovesBackwards(byte level, Span<ushort> moves, int ctr = 0)
+    public void SetEncounterMovesBackwards(byte level, Span<ushort> moves, int ctr = 0, bool sameDescend = true)
     {
+        // sameDescend makes it work like a push-queue in reverse
         int index = FindLastLeq(level);
 
         while (true)
@@ -126,8 +131,12 @@ public sealed class Learnset(ushort[] Moves, byte[] Levels)
 
             // In the event we have multiple moves at the same level, insert them in regular descending order.
             int start = index;
-            while (start != 0 && Levels[start] == Levels[start - 1])
-                start--;
+
+            if (sameDescend)
+            {
+                while(start != 0 && Levels[start] == Levels[start - 1])
+                    start--;
+            }
 
             for (int i = start; i <= index; i++)
             {
