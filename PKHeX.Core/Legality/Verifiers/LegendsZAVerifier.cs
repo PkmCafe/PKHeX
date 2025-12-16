@@ -116,13 +116,9 @@ public sealed class LegendsZAVerifier : Verifier
         }
         var level = Math.Max((byte)1, pa9.MetLevel);
         var learn = LearnSource9ZA.Instance.GetLearnset(enc.Species, enc.Form);
-        if (!enc.IsAlpha)
-        {
-            learn.SetEncounterMovesBackwards(level, moves, sameDescend: false);
-            return;
-        }
         learn.SetEncounterMovesBackwards(level, moves, sameDescend: false);
-        moves[0] = PersonalTable.ZA[enc.Species, enc.Form].AlphaMove;
+        if (enc.IsAlpha)
+            moves[0] = PersonalTable.ZA[enc.Species, enc.Form].AlphaMove;
     }
 
     private void CheckFlagsTM(LegalityAnalysis data, PA9 pa9)
@@ -308,7 +304,7 @@ public sealed class LegendsZAVerifier : Verifier
     private static bool IsPermittedUnsetPlusMove(Species species, Move move) => species switch
     {
         // Relearn moves added in DLC:
-        Pichu or Pikachu or Raichu when move is DrainingKiss => true,
+        Pikachu or Raichu when move is DrainingKiss => true,
         Onix or Steelix when move is RockBlast => true,
         Absol when move is Snarl or PhantomForce => true,
         Roserade or Whirlipede or Scolipede when move is MortalSpin => true,
